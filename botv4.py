@@ -9,6 +9,8 @@ from aiogram import Bot, Dispatcher, types
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timedelta
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+
 load_dotenv()
 
 TG_TOKEN = os.getenv("TG_TOKEN")
@@ -119,6 +121,82 @@ async def send_to_discord(text: str):
     async with aiohttp.ClientSession() as session:
         await session.post(DISCORD_WEBHOOK,json={"content": text})
 
+@dp.callback_query()
+async def handle_task_buttons(callback: CallbackQuery):
+    if callback.from_user.id not in ADMIN_IDS:
+        return
+
+    data = callback.data
+
+    if data.startswith("close_"):
+        chat_id = int(data.replace("close_", ""))
+        task = open_tasks.get(chat_id)
+        if not task:
+            await callback.answer("Task already closed", show_alert=True)
+            return
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Yes", callback_data=f"do_close_{chat_id}"),
+                InlineKeyboardButton(text="❌ No", callback_data="cancel_close")
+            ]
+        ])
+        await callback.message.edit_text(
+            f"Are you sure you want to close task '{task['title']}'?",
+            reply_markup=keyboard
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("do_close_"):
+        chat_id = int(data.replace("do_close_", ""))
+        task = open_tasks.get(chat_id)
+        if not task:
+            await callback.answer("Task already closed", show_alert=True)
+            return
+
+        delta = datetime.utcnow() - task["opened_at"]
+
+        del open_tasks[chat_id]
+        if chat_id in pending_media_checks:
+            pending_media_checks[chat_id].cancel()
+            pending_media_checks.pop(chat_id, None)
+
+        if open_tasks:
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+            now = datetime.utcnow()
+            for cid, t in open_tasks.items():
+                delta = now - t["opened_at"]
+                mins = int(delta.total_seconds() // 60)
+                keyboard.inline_keyboard.append(
+                    [InlineKeyboardButton(
+                        text=f"{t['title']} — {mins} min",
+                        callback_data=f"close_{cid}"
+                    )]
+                )
+            await callback.message.edit_text("Open tasks:", reply_markup=keyboard)
+        else:
+            await callback.message.edit_text("All tasks are closed ✅")
+        return
+
+    if data == "cancel_close":
+        if open_tasks:
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+            now = datetime.utcnow()
+            for cid, t in open_tasks.items():
+                delta = now - t["opened_at"]
+                mins = int(delta.total_seconds() // 60)
+                keyboard.inline_keyboard.append(
+                    [InlineKeyboardButton(
+                        text=f"{t['title']} — {mins} min",
+                        callback_data=f"close_{cid}"
+                    )]
+                )
+            await callback.message.edit_text("Open tasks:", reply_markup=keyboard)
+        else:
+            await callback.message.edit_text("There are no open tasks")
+        await callback.answer()
+
 async def handle_admin_command(msg: types.Message):
     text = (msg.text or "").strip()
 
@@ -127,44 +205,28 @@ async def handle_admin_command(msg: types.Message):
             await msg.answer("There are no open tasks")
             return
 
-        now = datetime.utcnow()
-        lines = ["Open tasks:"]
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[])
 
-        for task in open_tasks.values():
+        now = datetime.utcnow()
+
+        for chat_id, task in open_tasks.items():
             delta = now - task["opened_at"]
             minutes = int(delta.total_seconds() // 60)
-            seconds = int(delta.total_seconds() % 60)
 
-            lines.append(
-                f"{task['title']} — open {minutes} min {seconds} sec"
+            button_text = f"{task['title']} — {minutes} min"
+            keyboard.inline_keyboard.append(
+                [InlineKeyboardButton(
+                    text=button_text,
+                    callback_data=f"close_{chat_id}"
+                )]
             )
 
-        await msg.answer("\n".join(lines))
-        return
-
-    if text.startswith("!done"):
-        name = text.replace("!done", "").strip().lower()
-
-        if not name:
-            await msg.answer("Use: `!done group_name`")
-            return
-
-        for chat_id, task in list(open_tasks.items()):
-            if name in task["title"].lower():
-                del open_tasks[chat_id]
-                if chat_id in pending_media_checks:
-                    pending_media_checks[chat_id].cancel()
-                    pending_media_checks.pop(chat_id, None)
-                await msg.answer(f"Task {task['title']} closed prematurely")
-                return
-
-        await msg.answer("Task not found")
+        await msg.answer("Open tasks:", reply_markup=keyboard)
         return
 
     await msg.answer(
         "⚙️ Commands:\n"
         "/tasks — task list\n"
-        "!done <group name> — close the task"
     )
 
 @dp.message()
