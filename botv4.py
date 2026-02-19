@@ -1,5 +1,6 @@
 import asyncio
 import os
+import random
 import aiohttp
 import pandas as pd
 import re
@@ -21,10 +22,34 @@ ADMIN_IDS = {int(i.strip()) for i in admin_raw.split(",") if i.strip()}
 if not TG_TOKEN or not DISCORD_WEBHOOK:
     raise RuntimeError("TG_TOKEN или DISCORD_WEBHOOK не заданы")
 
+EMOJIS = ["⏳", "🔎", "🛠️", "😊", "🤝", "⌛"]
+
 AUTO_REPLY = {
-    "ru": "Здравствуйте! Мы работаем над вашим запросом",
-    "uk": "Вітаємо! Ми працюємо над вашим запитом",
-    "en": "Hello! We’re working on your request",
+    "ru": [
+        "Здравствуйте! Работаем над вашим запросом",
+        "Здравствуйте! Приступаем к работе",
+        "Здравствуйте! Обрабатываем ваш запрос",
+        "Здравствуйте! Занимаемся вашим запросом",
+        "Здравствуйте! Ваш запрос принят в обработку",
+    ],
+    "uk": [
+        "Вітаємо! Працюємо над вашим запитом",
+        "Вітаємо! Обробляємо ваш запит",
+        "Вітаємо! Приступаємо до роботи",
+        "Вітаємо! Працюємо над цим",
+        "Вітаємо! Опрацьовуємо ваш запит",
+    ],
+    "en": [
+        "Hello! Working on your request",
+        "Hello! Our team is reviewing your request",
+        "Hello! Your request has been received and is being processed",
+        "Hello! We’re checking this now",
+        "Hello! Thanks for your message — we’re on it",
+        "Hello! Our team is processing your request",
+        "Hello! Your request is in progress",
+        "Hello! Thanks for reaching out — we’re on it",
+        "Hello! We’ve got your request and are working on it"
+    ],
 }
 CALL_KEYWORDS = {
     "ru": [
@@ -113,6 +138,17 @@ def is_call_request(text: str, lang: str) -> bool:
         if phrase in text:
             return True
     return False
+
+def get_reply(lang: str, reply_dict: dict) -> str:
+    texts = reply_dict.get(lang) or reply_dict.get("en")
+    
+    if isinstance(texts, list):
+        text = random.choice(texts)
+    else:
+        text = texts
+    
+    emoji = random.choice(EMOJIS)
+    return f"{text} {emoji}"
 
 bot = Bot(token=TG_TOKEN)
 dp = Dispatcher()
@@ -278,7 +314,12 @@ async def on_message(msg: types.Message):
             "opened_at": datetime.utcnow(),
             "notifications_sent": [],
         }
-        await msg.answer(CALL_REPLY.get(lang) if is_call else AUTO_REPLY.get(lang))
+        
+        if is_call:
+            await msg.answer(get_reply(lang, CALL_REPLY))
+        else:
+            await msg.answer(get_reply(lang, AUTO_REPLY))
+        
         await send_to_discord(msg.chat.title)
         if chat_id in pending_media_checks:
             pending_media_checks[chat_id].cancel()
