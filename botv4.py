@@ -52,7 +52,7 @@ CALL_REPLY = {
 CLOSE_KEYWORDS = [
     "done", "all done", "have a good day", "stay safe", "ready", "shift started", "fixed", "safe trip",
     "have a nice day", "have a good rest", "updated pickup time", "started the shift", "have a nice trip",
-    "have a good one", "have a great day", "fixed your log", "unfortunately", "made a split", "made a cycle reset",
+    "have a good one", "have a great day", "fixed your log", "made a split", "made a cycle reset",
     "violations fixed", "fixed violations", "time added", "BOL added", "added some time", "have a safe trip", 
     "shift opened", "all the best", "all fixed", "log fixed", "shift available", "split activated", "request completed",
     "co-driver drop", "shift reopened", "new shift opened", "info added", "have a nice rest", "have a great rest",
@@ -60,12 +60,12 @@ CLOSE_KEYWORDS = [
     "added info", "added time", "added break", "break added", "PTI added", "added PTI",
     "готово", "хорошей дороги", "безопасной дороги", "хорошего дня", "всего наилучшего",
     "всего доброго", "новая смена доступна", "новая смена открыта", "смена открыта", "открыли смену", 
-    "брейк добавлен", "к сожалению", "смена доступна", "поправили", "сделали сплит", "активировали сплит", 
+    "брейк добавлен", "смена доступна", "поправили", "сделали сплит", "активировали сплит", 
     "сделали вам сплит", "запрос выполнен", "сделали сброс цикла", "добавили груз в логбук", "сделали брейк",
     "все исправили", "все поправили", "все готово", "хорошего дня и безопасной дороги", "хорошей и безопасной дороги",
     "добавили время", "добавили времени", "хорошего вам дня", "удачного вам дня", "начали смену", "смена началась",
     "добавили брейк", "добавили PTI", "PTI добавлен", "ПТИ добавлен", "ПТИ добавили", "сделали ПТИ",
-    "готово", "гарної дороги", "гарного дня", "безпечної дороги", "на жаль", "відкрили зміну", "гарної дороги", 
+    "готово", "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", 
     "всього найкращого", "зміна відкрита", "зробили", "додали", "зміна доступна", "сделали сплит", 
     "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "все готово", 
     "зробили скидання циклу", "нова зміна відкрита", "додали часу", "усе готово", "час додано",
@@ -192,7 +192,7 @@ async def handle_task_buttons(callback: CallbackQuery):
                         callback_data=f"close_{cid}"
                     )]
                 )
-            await callback.message.edit_text("Open tasks:", reply_markup=keyboard)
+            await callback.message.edit_text("Select the task you want to close. Open tasks:", reply_markup=keyboard)
         else:
             await callback.message.edit_text("There are no open tasks")
         await callback.answer()
