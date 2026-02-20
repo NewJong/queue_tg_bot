@@ -90,21 +90,19 @@ CLOSE_KEYWORDS = [
     "все исправили", "все поправили", "все готово", "хорошего дня и безопасной дороги", "хорошей и безопасной дороги",
     "добавили время", "добавили времени", "хорошего вам дня", "удачного вам дня", "начали смену", "смена началась",
     "добавили брейк", "добавили PTI", "PTI добавлен", "ПТИ добавлен", "ПТИ добавили", "сделали ПТИ",
-    "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", 
-    "всього найкращого", "зміна відкрита", "зробили", "додали", "зміна доступна", "сделали сплит", 
+    "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", "вдалої дороги", 
+    "всього найкращого", "зміна відкрита", "зробили", "додали", "зміна доступна", "сделали сплит", "безпечної вам дороги",
     "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "гарного відпочинку",
-    "зробили скидання циклу", "нова зміна відкрита", "додали часу", "усе готово", "час додано",
+    "зробили скидання циклу", "нова зміна відкрита", "додали часу", "усе готово", "час додано", "вдалої та безпечної дороги",
     "гарного дня та безпечної дороги", "гарної та безпечної дороги", "вдалого вам дня", "гарного вам дня",
     "зробили рестарт циклу", "зробили вам рестарт циклу", "рестарт циклу зроблено", "цикл оновлено",
     "PTI додано", "додали PTI", "ПТІ додано", "додали ПТІ", "ПТИ додано", "додали ПТИ", "счастливого пути", "логбук готов"
 ]
 
 THRESHOLD = 0.35 
-FUZZY_THRESHOLD = 80
 open_tasks = {}
 pending_media_checks = {}
-MEDIA_CHECK_DELAY = 30
-
+recently_closed = {}
 BOT_START_TIME = datetime.utcnow()
 
 df = pd.read_csv("data.csv")
@@ -193,6 +191,8 @@ async def handle_task_buttons(callback: CallbackQuery):
 
         delta = datetime.utcnow() - task["opened_at"]
 
+        recently_closed[chat_id] = datetime.utcnow()
+        
         del open_tasks[chat_id]
         if chat_id in pending_media_checks:
             pending_media_checks[chat_id].cancel()
@@ -291,8 +291,11 @@ async def on_message(msg: types.Message):
         
         for phrase in CLOSE_KEYWORDS:
             if phrase.lower() in normalized_text:
+                recently_closed[chat_id] = datetime.utcnow()
+
                 if chat_id in open_tasks:
                     del open_tasks[chat_id]
+
                 if chat_id in pending_media_checks:
                     pending_media_checks[chat_id].cancel()
                     pending_media_checks.pop(chat_id, None)
@@ -309,9 +312,28 @@ async def on_message(msg: types.Message):
     if is_call or need_help:
         if chat_id in open_tasks:
             return
+        now = datetime.utcnow()
+
+        if chat_id in recently_closed:
+            closed_at = recently_closed[chat_id]
+
+            if now - closed_at < timedelta(minutes=30):
+                await send_to_discord(f"**{chat_title} requested assistance again**")
+                open_tasks[chat_id] = {
+                    "title": chat_title,
+                    "opened_at": now,
+                    "notifications_sent": [],
+                }
+                if chat_id in pending_media_checks:
+                    pending_media_checks[chat_id].cancel()
+                    pending_media_checks.pop(chat_id, None)
+                return
+            else:
+                del recently_closed[chat_id]
+
         open_tasks[chat_id] = {
             "title": chat_title,
-            "opened_at": datetime.utcnow(),
+            "opened_at": now,
             "notifications_sent": [],
         }
 
@@ -321,6 +343,7 @@ async def on_message(msg: types.Message):
             await msg.answer(get_reply(lang, AUTO_REPLY))
         
         await send_to_discord(msg.chat.title)
+
         if chat_id in pending_media_checks:
             pending_media_checks[chat_id].cancel()
             pending_media_checks.pop(chat_id, None)
@@ -330,7 +353,7 @@ async def on_message(msg: types.Message):
         if chat_id not in pending_media_checks:
             async def media_check():
                 try:
-                    await asyncio.sleep(MEDIA_CHECK_DELAY)
+                    await asyncio.sleep(30)
                     if chat_id not in open_tasks:
                         open_tasks[chat_id] = {
                             "title": chat_title,
