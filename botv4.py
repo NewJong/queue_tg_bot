@@ -22,7 +22,7 @@ ADMIN_IDS = {int(i.strip()) for i in admin_raw.split(",") if i.strip()}
 if not TG_TOKEN or not DISCORD_WEBHOOK:
     raise RuntimeError("TG_TOKEN или DISCORD_WEBHOOK не заданы")
 
-EMOJIS = ["⏳", "🔎", "🛠️", "😊", "🤝", "⌛"]
+EMOJIS = ["⏳", "🔎", "🛠️", "😊", "🤝"]
 
 AUTO_REPLY = {
     "ru": [
@@ -79,20 +79,20 @@ CLOSE_KEYWORDS = [
     "have a nice day", "have a good rest", "updated pickup time", "started the shift", "have a nice trip",
     "have a good one", "have a great day", "fixed your log", "made a split", "made a cycle reset",
     "violations fixed", "fixed violations", "time added", "BOL added", "added some time", "have a safe trip", 
-    "shift opened", "all the best", "all fixed", "log fixed", "shift available", "split activated", "request completed",
+    "shift opened", "all the best", "all fixed", "all set", "log fixed", "shift available", "split activated", "request completed",
     "co-driver drop", "shift reopened", "new shift opened", "info added", "have a nice rest", "have a great rest",
     "log fixed", "logbook updated", "logbook fixed", "shift available", "started shift", "information added", "added information", 
-    "added info", "added time", "added break", "break added", "PTI added", "added PTI",
-    "готово", "хорошей дороги", "безопасной дороги", "хорошего дня", "всего наилучшего",
+    "added info", "added time", "added break", "break added", "PTI added", "added PTI", "stay and drive safe!"
+    "готово", "хорошей дороги", "безопасной дороги", "хорошего дня", "всего наилучшего", "хорошего отдыха",
     "всего доброго", "новая смена доступна", "новая смена открыта", "смена открыта", "открыли смену", 
     "брейк добавлен", "смена доступна", "поправили", "сделали сплит", "активировали сплит", 
     "сделали вам сплит", "запрос выполнен", "сделали сброс цикла", "добавили груз в логбук", "сделали брейк",
     "все исправили", "все поправили", "все готово", "хорошего дня и безопасной дороги", "хорошей и безопасной дороги",
     "добавили время", "добавили времени", "хорошего вам дня", "удачного вам дня", "начали смену", "смена началась",
     "добавили брейк", "добавили PTI", "PTI добавлен", "ПТИ добавлен", "ПТИ добавили", "сделали ПТИ",
-    "готово", "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", 
+    "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", 
     "всього найкращого", "зміна відкрита", "зробили", "додали", "зміна доступна", "сделали сплит", 
-    "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "все готово", 
+    "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "гарного відпочинку",
     "зробили скидання циклу", "нова зміна відкрита", "додали часу", "усе готово", "час додано",
     "гарного дня та безпечної дороги", "гарної та безпечної дороги", "вдалого вам дня", "гарного вам дня",
     "зробили рестарт циклу", "зробили вам рестарт циклу", "рестарт циклу зроблено", "цикл оновлено",
@@ -314,7 +314,7 @@ async def on_message(msg: types.Message):
             "opened_at": datetime.utcnow(),
             "notifications_sent": [],
         }
-        
+
         if is_call:
             await msg.answer(get_reply(lang, CALL_REPLY))
         else:
