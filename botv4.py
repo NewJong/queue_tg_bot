@@ -82,7 +82,7 @@ CLOSE_KEYWORDS = [
     "shift opened", "all the best", "all fixed", "all set", "log fixed", "shift available", "split activated", "request completed",
     "co-driver drop", "shift reopened", "new shift opened", "info added", "have a nice rest", "have a great rest",
     "log fixed", "logbook updated", "logbook fixed", "shift available", "started shift", "information added", "added information", 
-    "added info", "added time", "added break", "break added", "PTI added", "added PTI", "stay and drive safe!"
+    "added info", "added time", "added break", "break added", "PTI added", "added PTI", "stay and drive safe"
     "готово", "хорошей дороги", "безопасной дороги", "хорошего дня", "всего наилучшего", "хорошего отдыха",
     "всего доброго", "новая смена доступна", "новая смена открыта", "смена открыта", "открыли смену", 
     "брейк добавлен", "смена доступна", "поправили", "сделали сплит", "активировали сплит", 
@@ -92,7 +92,7 @@ CLOSE_KEYWORDS = [
     "добавили брейк", "добавили PTI", "PTI добавлен", "ПТИ добавлен", "ПТИ добавили", "сделали ПТИ",
     "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", "вдалої дороги", 
     "всього найкращого", "зміна відкрита", "зробили", "додали", "зміна доступна", "сделали сплит", "безпечної вам дороги",
-    "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "гарного відпочинку",
+    "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "гарного відпочинку", "всього доброго",
     "зробили скидання циклу", "нова зміна відкрита", "додали часу", "усе готово", "час додано", "вдалої та безпечної дороги",
     "гарного дня та безпечної дороги", "гарної та безпечної дороги", "вдалого вам дня", "гарного вам дня",
     "зробили рестарт циклу", "зробили вам рестарт циклу", "рестарт циклу зроблено", "цикл оновлено",
@@ -210,7 +210,7 @@ async def handle_task_buttons(callback: CallbackQuery):
                         callback_data=f"close_{cid}"
                     )]
                 )
-            await callback.message.edit_text("Open tasks:", reply_markup=keyboard)
+            await callback.message.edit_text("Select the task you want to close. Open tasks:", reply_markup=keyboard)
         else:
             await callback.message.edit_text("All tasks are closed ✅")
         return
