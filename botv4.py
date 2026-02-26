@@ -82,7 +82,7 @@ CLOSE_KEYWORDS = [
     "shift opened", "all the best", "all fixed", "all set", "log fixed", "shift available", "split activated", "request completed",
     "co-driver drop", "shift reopened", "new shift opened", "info added", "have a nice rest", "have a great rest",
     "log fixed", "logbook updated", "logbook fixed", "shift available", "started shift", "information added", "added information", 
-    "added info", "added time", "added break", "break added", "PTI added", "added PTI", "stay and drive safe"
+    "added info", "added time", "added break", "break added", "PTI added", "added PTI", "stay and drive safe",
     "готово", "хорошей дороги", "безопасной дороги", "хорошего дня", "всего наилучшего", "хорошего отдыха",
     "всего доброго", "новая смена доступна", "новая смена открыта", "смена открыта", "открыли смену", 
     "брейк добавлен", "смена доступна", "поправили", "сделали сплит", "активировали сплит", 
