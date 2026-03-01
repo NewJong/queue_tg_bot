@@ -354,6 +354,15 @@ async def on_message(msg: types.Message):
             async def media_check():
                 try:
                     await asyncio.sleep(30)
+                    now = datetime.utcnow()
+
+                    if chat_id in recently_closed:
+                        closed_at = recently_closed[chat_id]
+                        if now - closed_at < timedelta(minutes=30):
+                            return
+                        else:
+                            del recently_closed[chat_id]
+
                     if chat_id not in open_tasks:
                         open_tasks[chat_id] = {
                             "title": chat_title,
