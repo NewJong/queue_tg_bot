@@ -285,7 +285,8 @@ async def on_message(msg: types.Message):
                     or msg.video or msg.video_note or msg.animation
                     or msg.audio or msg.sticker or msg.poll 
                     or msg.contact or msg.location or msg.venue)
-    
+    light_media = bool(msg.sticker or msg.animation or msg.poll or msg.contact or msg.location or msg.venue)
+
     if msg.from_user.id in ADMIN_IDS:
         normalized_text = re.sub(r"[^a-zA-Zа-яА-ЯёЁіІїЇєЄ\s]", "", text).lower()
         
@@ -356,7 +357,7 @@ async def on_message(msg: types.Message):
                     await asyncio.sleep(30)
                     now = datetime.utcnow()
 
-                    if chat_id in recently_closed:
+                    if light_media and chat_id in recently_closed:
                         closed_at = recently_closed[chat_id]
                         if now - closed_at < timedelta(minutes=30):
                             return
