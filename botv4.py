@@ -75,7 +75,8 @@ CALL_REPLY = {
 }
 
 CLOSE_KEYWORDS = [
-    "done", "all done", "have a good day", "stay safe", "ready", "shift started", "fixed", "safe trip",
+    "done", "all done", "have a good day", "stay safe", "ready", "shift started", "safe trip", "fixed your violation",
+    "fixed", "added", "marked", "added new shipping", "added the load",
     "have a nice day", "have a good rest", "updated pickup time", "started the shift", "have a nice trip",
     "have a good one", "have a great day", "fixed your log", "made a split", "made a cycle reset",
     "violations fixed", "fixed violations", "time added", "BOL added", "added some time", "have a safe trip", 
@@ -90,7 +91,7 @@ CLOSE_KEYWORDS = [
     "все исправили", "все поправили", "все готово", "хорошего дня и безопасной дороги", "хорошей и безопасной дороги",
     "добавили время", "добавили времени", "хорошего вам дня", "удачного вам дня", "начали смену", "смена началась",
     "добавили брейк", "добавили PTI", "PTI добавлен", "ПТИ добавлен", "ПТИ добавили", "сделали ПТИ",
-    "гарної дороги", "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", "вдалої дороги", 
+    "гарного дня", "безпечної дороги", "відкрили зміну", "гарної дороги", "вдалої дороги", 
     "всього найкращого", "зміна відкрита", "зробили", "додали", "зміна доступна", "сделали сплит", "безпечної вам дороги",
     "активували спліт", "зробили спліт", "зробили вам спліт", "запит виконано", "гарного відпочинку", "всього доброго",
     "зробили скидання циклу", "нова зміна відкрита", "додали часу", "усе готово", "час додано", "вдалої та безпечної дороги",
