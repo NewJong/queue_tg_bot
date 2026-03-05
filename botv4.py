@@ -293,16 +293,31 @@ async def on_message(msg: types.Message):
         normalized_text = re.sub(r"[^a-zA-Zа-яА-ЯёЁіІїЇєЄ\s]", "", text).lower()
         
         for phrase in CLOSE_KEYWORDS:
-            if phrase.lower() in normalized_text:
-                recently_closed[chat_id] = datetime.utcnow()
+            phrase_clean = re.sub(r"[^a-zA-Zа-яА-ЯёЁіІїЇєЄ\s]", "", phrase).lower()
 
-                if chat_id in open_tasks:
-                    del open_tasks[chat_id]
+            if len(phrase_clean.split()) == 1:
+                pattern = r"\b" + re.escape(phrase_clean) + r"\b"
+                if re.search(pattern, normalized_text):
+                    recently_closed[chat_id] = datetime.utcnow()
 
-                if chat_id in pending_media_checks:
-                    pending_media_checks[chat_id].cancel()
-                    pending_media_checks.pop(chat_id, None)
-                return
+                    if chat_id in open_tasks:
+                        del open_tasks[chat_id]
+
+                    if chat_id in pending_media_checks:
+                        pending_media_checks[chat_id].cancel()
+                        pending_media_checks.pop(chat_id, None)
+                    return
+            else:
+                if phrase_clean in normalized_text:
+                    recently_closed[chat_id] = datetime.utcnow()
+
+                    if chat_id in open_tasks:
+                        del open_tasks[chat_id]
+
+                    if chat_id in pending_media_checks:
+                        pending_media_checks[chat_id].cancel()
+                        pending_media_checks.pop(chat_id, None)
+                    return
         return
     
     need_help = False
