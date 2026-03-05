@@ -60,8 +60,9 @@ CALL_KEYWORDS = {
         "пазвани мне", "пазвани мне пожалуйста",
     ],
     "uk": [
-        "наберіть мене", "подзвоніть", "можете подзвонити",
-        "передзвоніть", "зателефонуйте", "наберіть"
+        "наберіть мене", "подзвоніть", "можете подзвонити", "позвоніть",
+        "передзвоніть", "зателефонуйте", "наберіть", "перезвоніть",
+        "пазвоніть",
     ],
     "en": [
         "call me", "please call", "can you call",
@@ -82,7 +83,7 @@ CLOSE_KEYWORDS = [
     "violations fixed", "fixed violations", "time added", "BOL added", "added some time", "have a safe trip", 
     "shift opened", "all the best", "all fixed", "all set", "log fixed", "shift available", "split activated", "request completed",
     "co-driver drop", "shift reopened", "new shift opened", "info added", "have a nice rest", "have a great rest",
-    "log fixed", "logbook updated", "logbook fixed", "shift available", "started shift", "information added", "added information", 
+    "log fixed", "logbook updated", "logbook fixed", "started shift", "information added", "added information", 
     "added info", "added time", "added break", "break added", "PTI added", "added PTI", "stay and drive safe",
     "готово", "хорошей дороги", "безопасной дороги", "хорошего дня", "всего наилучшего", "хорошего отдыха",
     "всего доброго", "новая смена доступна", "новая смена открыта", "смена открыта", "открыли смену", 
