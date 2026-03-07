@@ -77,7 +77,7 @@ CALL_REPLY = {
 
 CLOSE_KEYWORDS = [
     "done", "all done", "have a good day", "stay safe", "ready", "shift started", "safe trip", "fixed your violation",
-    "fixed", "added", "marked", "added new shipping", "added the load",
+    "fixed", "added", "marked", "added new shipping", "added the load", "log been set",
     "have a nice day", "have a good rest", "updated pickup time", "started the shift", "have a nice trip",
     "have a good one", "have a great day", "fixed your log", "made a split", "made a cycle reset",
     "violations fixed", "fixed violations", "time added", "BOL added", "added some time", "have a safe trip", 
@@ -197,7 +197,6 @@ async def handle_task_buttons(callback: CallbackQuery):
         
         del open_tasks[chat_id]
         if chat_id in pending_media_checks:
-            pending_media_checks[chat_id].cancel()
             pending_media_checks.pop(chat_id, None)
 
         if open_tasks:
@@ -304,7 +303,6 @@ async def on_message(msg: types.Message):
                         del open_tasks[chat_id]
 
                     if chat_id in pending_media_checks:
-                        pending_media_checks[chat_id].cancel()
                         pending_media_checks.pop(chat_id, None)
                     return
             else:
@@ -315,7 +313,6 @@ async def on_message(msg: types.Message):
                         del open_tasks[chat_id]
 
                     if chat_id in pending_media_checks:
-                        pending_media_checks[chat_id].cancel()
                         pending_media_checks.pop(chat_id, None)
                     return
         return
@@ -336,14 +333,13 @@ async def on_message(msg: types.Message):
             closed_at = recently_closed[chat_id]
 
             if now - closed_at < timedelta(minutes=30):
-                await send_to_discord(f"**{chat_title} requested assistance again**")
                 open_tasks[chat_id] = {
                     "title": chat_title,
                     "opened_at": now,
                     "notifications_sent": [],
                 }
+                await send_to_discord(f"**{chat_title} requested assistance again**")
                 if chat_id in pending_media_checks:
-                    pending_media_checks[chat_id].cancel()
                     pending_media_checks.pop(chat_id, None)
                 return
             else:
@@ -363,7 +359,6 @@ async def on_message(msg: types.Message):
         await send_to_discord(msg.chat.title)
 
         if chat_id in pending_media_checks:
-            pending_media_checks[chat_id].cancel()
             pending_media_checks.pop(chat_id, None)
         return
 
