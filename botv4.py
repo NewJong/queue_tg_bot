@@ -66,7 +66,7 @@ CALL_KEYWORDS = {
     ],
     "en": [
         "call me", "please call", "can you call",
-        "give me a call", "call please", "call", "call me please"
+        "give me a call", "call please", "call me please"
     ]
 }
 CALL_REPLY = {
