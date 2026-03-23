@@ -454,3 +454,9 @@ async def main():
         monitor_task.cancel()
         await session.close()
         print(f"[{datetime.utcnow()}] Bot stopped, session closed")
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print(f"[{datetime.utcnow()}] Bot stopped manually")
