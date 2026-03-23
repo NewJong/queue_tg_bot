@@ -19,6 +19,8 @@ DISCORD_WEBHOOK = os.getenv("DISCORD_WEBHOOK")
 admin_raw = os.getenv("ADMIN_IDS", "")
 ADMIN_IDS = {int(i.strip()) for i in admin_raw.split(",") if i.strip()}
 
+session = None
+
 if not TG_TOKEN or not DISCORD_WEBHOOK:
     raise RuntimeError("TG_TOKEN или DISCORD_WEBHOOK не заданы")
 
@@ -154,8 +156,34 @@ bot = Bot(token=TG_TOKEN)
 dp = Dispatcher()
 
 async def send_to_discord(text: str):
-    async with aiohttp.ClientSession() as session:
-        await session.post(DISCORD_WEBHOOK,json={"content": text})
+    global session
+    if session is None or session.closed:
+        connector = aiohttp.TCPConnector(limit=10)
+        session = aiohttp.ClientSession(connector=connector)
+    
+    for attempt in range(5):  
+        try:
+            async with session.post(DISCORD_WEBHOOK, json={"content": text}, timeout=10) as response:
+
+                if response.status == 204:
+                    return
+
+                if response.status == 429:
+                    data = await response.json()
+                    retry_after = data.get("retry_after", 5)
+                    print(f"[{datetime.utcnow()}] Rate limited. Retry in {retry_after}s")
+                    await asyncio.sleep(retry_after)
+                    continue
+
+                error_text = await response.text()
+                print(f"[{datetime.utcnow()}] Discord Error {response.status}: {error_text}")
+                return
+
+        except Exception as e:
+            print(f"[{datetime.utcnow()}] Connection Error: {e}")
+            await asyncio.sleep(1)
+
+    print(f"[{datetime.utcnow()}] Failed to send message after retries")
 
 @dp.callback_query()
 async def handle_task_buttons(callback: CallbackQuery):
@@ -410,12 +438,19 @@ async def monitor_tasks():
         await asyncio.sleep(120)
 
 async def main():
-    asyncio.create_task(monitor_tasks())
-    print("Bot started")
-    await dp.start_polling(bot)
+    global session
+    connector = aiohttp.TCPConnector(limit=10) 
+    session = aiohttp.ClientSession(connector=connector)
 
-if __name__ == "__main__":
+    monitor_task = asyncio.create_task(monitor_tasks())
+    print(f"[{datetime.utcnow()}] Bot started and monitoring active")
+
     try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        print("Bot stopped")
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
+    except Exception as e:
+        print(f"[{datetime.utcnow()}] Critical polling error: {e}")
+    finally:
+        monitor_task.cancel()
+        await session.close()
+        print(f"[{datetime.utcnow()}] Bot stopped, session closed")
