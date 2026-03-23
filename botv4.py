@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timedelta
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from asyncio import Queue
 
 load_dotenv()
 
@@ -20,6 +21,7 @@ admin_raw = os.getenv("ADMIN_IDS", "")
 ADMIN_IDS = {int(i.strip()) for i in admin_raw.split(",") if i.strip()}
 
 session = None
+discord_queue = Queue()
 
 if not TG_TOKEN or not DISCORD_WEBHOOK:
     raise RuntimeError("TG_TOKEN или DISCORD_WEBHOOK не заданы")
@@ -161,7 +163,7 @@ async def send_to_discord(text: str):
         connector = aiohttp.TCPConnector(limit=10)
         session = aiohttp.ClientSession(connector=connector)
     
-    for attempt in range(5):  
+    for attempt in range(3):  
         try:
             async with session.post(DISCORD_WEBHOOK, json={"content": text}, timeout=10) as response:
 
@@ -169,21 +171,26 @@ async def send_to_discord(text: str):
                     return
 
                 if response.status == 429:
-                    data = await response.json()
-                    retry_after = data.get("retry_after", 5)
-                    print(f"[{datetime.utcnow()}] Rate limited. Retry in {retry_after}s")
+                    retry_after = 3
+
+                    try:
+                        data = await response.json()
+                        retry_after = data.get("retry_after", 3)
+                    except:
+                        pass
+
+                    print(f"[{datetime.utcnow()}] Rate limited. Sleep {retry_after}s")
                     await asyncio.sleep(retry_after)
                     continue
 
-                error_text = await response.text()
-                print(f"[{datetime.utcnow()}] Discord Error {response.status}: {error_text}")
-                return
+                if response.status >= 400:
+                    error_text = await response.text()
+                    print(f"[{datetime.utcnow()}] Discord Error {response.status}: {error_text}")
+                    return
 
         except Exception as e:
             print(f"[{datetime.utcnow()}] Connection Error: {e}")
             await asyncio.sleep(1)
-
-    print(f"[{datetime.utcnow()}] Failed to send message after retries")
 
 @dp.callback_query()
 async def handle_task_buttons(callback: CallbackQuery):
@@ -296,6 +303,8 @@ async def handle_admin_command(msg: types.Message):
 
 @dp.message()
 async def on_message(msg: types.Message):
+    if msg.from_user.is_bot:
+        return
     if msg.date.replace(tzinfo=None) < BOT_START_TIME:
         return
     if msg.chat.type == "private":
@@ -366,7 +375,7 @@ async def on_message(msg: types.Message):
                     "opened_at": now,
                     "notifications_sent": [],
                 }
-                await send_to_discord(f"**{chat_title} requested assistance again**")
+                await discord_queue.put(f"**{chat_title} requested assistance again**")
                 if chat_id in pending_media_checks:
                     pending_media_checks.pop(chat_id, None)
                 return
@@ -384,7 +393,7 @@ async def on_message(msg: types.Message):
         else:
             await msg.answer(get_reply(lang, AUTO_REPLY))
         
-        await send_to_discord(msg.chat.title)
+        await discord_queue.put(msg.chat.title)
 
         if chat_id in pending_media_checks:
             pending_media_checks.pop(chat_id, None)
@@ -410,7 +419,7 @@ async def on_message(msg: types.Message):
                             "opened_at": datetime.utcnow(),
                             "notifications_sent": [],
                         }
-                        await send_to_discord(f"**{chat_title} needs an answer**")
+                        await discord_queue.put(f"**{chat_title} needs an answer**")
                 except asyncio.CancelledError:
                     pass
                 finally:
@@ -429,13 +438,24 @@ async def monitor_tasks():
 
             for minutes in milestones:
                 if elapsed_minutes >= minutes and minutes not in task["notifications_sent"]:
-                    await send_to_discord(f"**{group_name} task open for more than {minutes} minutes**")
+                    await discord_queue.put(f"**{group_name} task open for more than {minutes} minutes**")
                     task["notifications_sent"].append(minutes)
 
             if now - task["opened_at"] > timedelta(hours=1):
                 del open_tasks[chat_id]
 
         await asyncio.sleep(120)
+
+async def discord_worker():
+    while True:
+        text = await discord_queue.get()
+
+        try:
+            await send_to_discord(text)
+        except Exception as e:
+            print(f"[{datetime.utcnow()}] Worker error: {e}")
+
+        await asyncio.sleep(0.6)
 
 async def main():
     global session
@@ -444,6 +464,7 @@ async def main():
 
     monitor_task = asyncio.create_task(monitor_tasks())
     print(f"[{datetime.utcnow()}] Bot started and monitoring active")
+    worker_task = asyncio.create_task(discord_worker())
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
@@ -452,8 +473,10 @@ async def main():
         print(f"[{datetime.utcnow()}] Critical polling error: {e}")
     finally:
         monitor_task.cancel()
+        worker_task.cancel()
         await session.close()
         print(f"[{datetime.utcnow()}] Bot stopped, session closed")
+
 
 if __name__ == "__main__":
     try:
