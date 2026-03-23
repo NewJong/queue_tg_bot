@@ -171,11 +171,11 @@ async def send_to_discord(text: str):
                     return
 
                 if response.status == 429:
-                    retry_after = 3
+                    retry_after = 10
 
                     try:
                         data = await response.json()
-                        retry_after = data.get("retry_after", 3)
+                        retry_after = data.get("retry_after", 10)
                     except:
                         pass
 
@@ -190,7 +190,7 @@ async def send_to_discord(text: str):
 
         except Exception as e:
             print(f"[{datetime.utcnow()}] Connection Error: {e}")
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
 
 @dp.callback_query()
 async def handle_task_buttons(callback: CallbackQuery):
@@ -447,15 +447,17 @@ async def monitor_tasks():
         await asyncio.sleep(120)
 
 async def discord_worker():
+    print("DISCORD WORKER STARTED")
     while True:
         text = await discord_queue.get()
-
+        print(f"SEND: {text}")
+        print(f"QUEUE SIZE: {discord_queue.qsize()}")
         try:
             await send_to_discord(text)
         except Exception as e:
             print(f"[{datetime.utcnow()}] Worker error: {e}")
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(10)
 
 async def main():
     global session
@@ -477,9 +479,5 @@ async def main():
         await session.close()
         print(f"[{datetime.utcnow()}] Bot stopped, session closed")
 
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        print(f"[{datetime.utcnow()}] Bot stopped manually")
+    asyncio.run(main())
