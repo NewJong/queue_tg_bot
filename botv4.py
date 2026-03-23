@@ -190,7 +190,7 @@ async def send_to_discord(text: str):
 
         except Exception as e:
             print(f"[{datetime.utcnow()}] Connection Error: {e}")
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
 
 @dp.callback_query()
 async def handle_task_buttons(callback: CallbackQuery):
@@ -455,7 +455,7 @@ async def discord_worker():
         except Exception as e:
             print(f"[{datetime.utcnow()}] Worker error: {e}")
 
-        await asyncio.sleep(0.6)
+        await asyncio.sleep(2)
 
 async def main():
     global session
